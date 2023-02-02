@@ -13,7 +13,7 @@ function TrigoHermite4Derivatives(part)
 % Dates
 %--------------------------------------------------------------------------
 % First version: June 01, 2022;
-% Checked: June 20, 2022.
+% Checked: January 27, 2023.
 %--------------------------------------------------------------------------
 % Authors
 %--------------------------------------------------------------------------
@@ -25,8 +25,8 @@ function TrigoHermite4Derivatives(part)
 % approach"
 % G. Elefante
 %--------------------------------------------------------------------------
-shift_nodes = 0;
-Test_Fun = 4;
+shift_nodes = 1;
+Test_Fun = 1;
 
 switch Test_Fun
     case 1
@@ -78,12 +78,24 @@ switch Test_Fun
             1500000*cos(pi/6 - x).^3.*tanh(50*sin(pi/6 - x)).*sech(50*sin(pi/6 - x))).^2 + 50*sin(pi/6 - x).*sech(50*sin(pi/6 - x)).^2.*(-300*sin(pi/6 - x).*tanh(50*sin(pi/6 - x)) - 10000*cos(pi/6 - x).^2.*tanh(50*sin(pi/6 - x)).^2 +...
             5000*cos(pi/6 - x).^2.*sech(50*sin(pi/6 - x)).^2 + 1) + 5000*cos(pi/6 - x).^2.*tanh(50*sin(pi/6 - x)).*sech(50*sin(pi/6 - x)).^2.*(-300*sin(pi/6 - x).*tanh(50*sin(pi/6 - x)) - 10000*cos(pi/6 - x).^2.*tanh(50*sin(pi/6 - x)).^2 + ...
             5000*cos(pi/6 - x).^2.*sech(50*sin(pi/6 - x)).^2 + 1);
+    case 5
+        f = @(x) tanh(sin(x)).*exp(-cos(x));
+        Df = @(x) exp(-cos(x)).*(cos(x).*sech(sin(x)).^2 + sin(x).*tanh(sin(x)));
+        D2f = @(x) exp(-cos(x)).*((cos(x) + sin(x).^2).*tanh(sin(x)) + sech(sin(x)).^2.*(-sin(x) + ...
+            sin(2*x) - 2*cos(x).^2.*tanh(sin(x))));
+        D3f = @(x) exp(-cos(x)).*(-2*cos(x).^3.*sech(sin(x)).^4 + sin(x).*(-1 + 3*cos(x) + sin(x).^2).*tanh(sin(x)) + ...
+            sech(sin(x)).^2.*(-(cos(x)/4) + 3*cos(2*x) - 3/4*cos(3*x) - 6*(-1 + cos(x)).*cos(x).*sin(x).*tanh(sin(x)) + ...
+            4*cos(x).^3.*tanh(sin(x)).^2));
+        D4f = @(x) 1/8*exp(-cos(x)).*((-1 + 4*cos(x) + 24*cos(2*x) - 12*cos(3*x) + cos(4*x)).*tanh(sin(x)) + ...
+            32*sech(sin(x)).^4.*((3 - 2*cos(x)).*cos(x).^2.*sin(x) + 4*cos(x).^4.*tanh(sin(x))) - 4*sech(sin(x)).^2.*(sin(x) +...
+            12*sin(2*x) - 9*sin(3*x) + sin(4*x) + (1 + 6*cos(x) - 14*cos(2*x) + 18*cos(3*x) - 3*cos(4*x)).*tanh(sin(x)) - 16*cos(x).^2.*(-3*sin(x) +...
+            sin(2*x)).*tanh(sin(x)).^2 + 16*cos(x).^4.*tanh(sin(x)).^3));
 end    
 
 
 switch part
     case 1
-        N = 120;
+        N = 60;
 
         nodes = linspace(0,2*pi,N+1);
         nodes(end) = [];
@@ -166,9 +178,9 @@ switch part
             end
         end
 
-        [~,loc] = ismember(nodes,x_eval);
-        id = find(loc);
-        Int(loc(id)) = f(x_eval(loc(id)));
+        li = ismember(x_eval,nodes);
+        liN = ismember(nodes,x_eval(li));
+        Int(li) = f(nodes(liN));
 
         MinG = min([f(x_eval),Int]); 
         MaxG = max([f(x_eval),Int]);
@@ -196,8 +208,8 @@ switch part
             nodes(end) = [];
             
             if shift_nodes
-                alpha1 = 0.5;
-                alpha2 = 0.5;
+                alpha1 = 0.85;
+                alpha2 = 0.85;
                 TTT1=pi/6;
                 TTT2=7/6*pi;
                 det = @(a,b,x) abs(exp(1i*x)-exp(-1i*x)*a*b).^2-imag(exp(-1i*x)*(a+b)).^2;
@@ -273,9 +285,9 @@ switch part
                 end
             end
 
-            [~,loc] = ismember(nodes,x_eval);
-            id = find(loc);
-            Int(loc(id)) = f(x_eval(loc(id)));
+            li = ismember(x_eval,nodes);
+            liN = ismember(nodes,x_eval(li));
+            Int(li) = f(nodes(liN));
 
             err(h) = max(abs(f(x_eval)-Int));
 
@@ -285,9 +297,14 @@ switch part
 
         figure(2)
         semilogy(N_value,err)
+        title('Absolute Error with N = 5,10,20,40,...,1280')
+        xlabel('N')
+        ylabel('Absolute Error')
 
         fprintf('\n ------------------------------\n ')
-        fprintf(' Approximate convergence: %1.2f \n ',approx_exp(end))
+        for u=1:(length(N_value)-1)
+            fprintf(' Approximate ord. conv. N=%d: %1.2f \n ',N_value(u),approx_exp(u))
+        end
         fprintf(' ------------------------------\n ')
 
 end

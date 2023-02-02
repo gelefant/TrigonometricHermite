@@ -13,7 +13,7 @@ function TrigoHermite2Derivatives(part)
 % Dates
 %--------------------------------------------------------------------------
 % First version: June 01, 2022;
-% Checked: June 20, 2022.
+% Checked: January 27, 2023.
 %--------------------------------------------------------------------------
 % Authors
 %--------------------------------------------------------------------------
@@ -47,6 +47,11 @@ switch Test_Fun
         f = @(x) tanh(50*cos(x+pi/3));
         Df = @(x)  -50*cos(pi/6 - x).*sech(50*sin(pi/6 - x)).^2;
         D2f = @(x) -50*sech(50*sin(pi/6 - x)).^2.*(sin(pi/6 - x) + 100*cos(pi/6 - x).^2.*tanh(50*sin(pi/6 - x)));
+    case 5
+        f = @(x) tanh(sin(x)).*exp(-cos(x));
+        Df = @(x) exp(-cos(x)).*(cos(x).*sech(sin(x)).^2 + sin(x).*tanh(sin(x)));
+        D2f = @(x) exp(-cos(x)).*((cos(x) + sin(x).^2).*tanh(sin(x)) + sech(sin(x)).^2.*(-sin(x) + ...
+            sin(2*x) - 2*cos(x).^2.*tanh(sin(x))));
 end       
 
 
@@ -59,8 +64,8 @@ switch part
         nodes(end) = [];
 
         if shift_nodes
-            alpha1 = 0.5;
-            alpha2 = 0.5;
+            alpha1 = 0.75;
+            alpha2 = 0.75;
             TTT1=pi/6;
             TTT2=7/6*pi;
             det = @(a,b,x) abs(exp(1i*x)-exp(-1i*x)*a*b).^2-imag(exp(-1i*x)*(a+b)).^2;
@@ -114,9 +119,9 @@ switch part
             end
         end
 
-        [~,loc] = ismember(nodes,x_eval);
-        id = find(loc);
-        Int(loc(id)) = f(x_eval(loc(id)));
+        li = ismember(x_eval,nodes);
+        liN = ismember(nodes,x_eval(li));
+        Int(li) = f(nodes(liN));
 
         MinG = min([f(x_eval),Int]); 
         MaxG = max([f(x_eval),Int]);
@@ -136,7 +141,7 @@ switch part
         fprintf('\n\n Number of nodes: %i \n Relative Error : %2.4e \n Absolute Error : %2.4e \n\n', N, err_rel, err_abs)
 
     case 2
-        N_value = [5,10,20,40,80];
+        N_value = [5,10,20,40,80,160];
 
         for h = 1:length(N_value)
             N = N_value(h);
@@ -144,8 +149,8 @@ switch part
             nodes(end) = [];
             
             if shift_nodes
-                alpha1 = 0.5;
-                alpha2 = 0.5;
+                alpha1 = 0.85;
+                alpha2 = 0.85;
                 TTT1=pi/6;
                 TTT2=7/6*pi;
                 det = @(a,b,x) abs(exp(1i*x)-exp(-1i*x)*a*b).^2-imag(exp(-1i*x)*(a+b)).^2;
@@ -199,9 +204,9 @@ switch part
                 end
             end
 
-            [~,loc] = ismember(nodes,x_eval);
-            id = find(loc);
-            Int(loc(id)) = f(x_eval(loc(id)));
+            li = ismember(x_eval,nodes);
+            liN = ismember(nodes,x_eval(li));
+            Int(li) = f(nodes(liN));
 
             err(h) = max(abs(f(x_eval)-Int));
 
@@ -209,6 +214,9 @@ switch part
 
         figure(2)
         semilogy(N_value,err)
+        title('Absolute Error with N = 5,10,20,40')
+        xlabel('N')
+        ylabel('Absolute Error')
 end
 
 end
